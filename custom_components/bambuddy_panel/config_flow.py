@@ -12,11 +12,9 @@ from homeassistant.helpers import selector
 
 from .const import (
     CONF_ICON,
-    CONF_PROXY_PORT,
     CONF_TITLE,
     CONF_URL,
     DEFAULT_ICON,
-    DEFAULT_PROXY_PORT,
     DEFAULT_TITLE,
     DEFAULT_URL,
     DOMAIN,
@@ -31,9 +29,6 @@ def _schema(defaults: dict[str, Any]) -> vol.Schema:
             ),
             vol.Required(CONF_TITLE, default=defaults.get(CONF_TITLE, DEFAULT_TITLE)): str,
             vol.Required(CONF_ICON, default=defaults.get(CONF_ICON, DEFAULT_ICON)): selector.IconSelector(),
-            vol.Required(
-                CONF_PROXY_PORT, default=defaults.get(CONF_PROXY_PORT, DEFAULT_PROXY_PORT)
-            ): vol.All(vol.Coerce(int), vol.Range(min=0, max=65535)),
         }
     )
 
@@ -55,7 +50,7 @@ class BambuddyPanelConfigFlow(ConfigFlow, domain=DOMAIN):
 
 
 class BambuddyPanelOptionsFlow(OptionsFlow):
-    """Change URL, title, icon or proxy port after setup."""
+    """Change URL, title or icon after setup."""
 
     async def async_step_init(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         if user_input is not None:

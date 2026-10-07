@@ -6,15 +6,14 @@
     "step": {
       "user": {
         "title": "Bambuddy Panel",
-        "description": "Adds Bambuddy to the sidebar.",
+        "description": "Adds Bambuddy to the sidebar. Home Assistant serves it, so it also works over remote access.",
         "data": {
           "url": "Bambuddy URL",
           "title": "Sidebar title",
-          "icon": "Sidebar icon",
-          "proxy_port": "Proxy port"
+          "icon": "Sidebar icon"
         },
         "data_description": {
-          "proxy_port": "Bambuddy blocks being shown inside other pages, so Home Assistant serves it through a small proxy on this port. Set 0 to load Bambuddy directly."
+          "url": "Address Home Assistant uses to reach Bambuddy on your network."
         }
       }
     }
@@ -26,11 +25,10 @@
         "data": {
           "url": "Bambuddy URL",
           "title": "Sidebar title",
-          "icon": "Sidebar icon",
-          "proxy_port": "Proxy port"
+          "icon": "Sidebar icon"
         },
         "data_description": {
-          "proxy_port": "Bambuddy blocks being shown inside other pages, so Home Assistant serves it through a small proxy on this port. Set 0 to load Bambuddy directly."
+          "url": "Address Home Assistant uses to reach Bambuddy on your network."
         }
       }
     }

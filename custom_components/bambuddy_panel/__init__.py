@@ -2,70 +2,82 @@
 
 from __future__ import annotations
 
-import logging
-from urllib.parse import urlsplit
+from pathlib import Path
+import secrets
 
-from homeassistant.components import frontend
-from homeassistant.components.network import async_get_source_ip
+from homeassistant.components import frontend, panel_custom
+from homeassistant.components.http import StaticPathConfig
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.network import NoURLAvailableError, get_url
+from homeassistant.helpers.storage import Store
+from homeassistant.loader import async_get_integration
 
 from .const import (
     CONF_ICON,
-    CONF_PROXY_PORT,
     CONF_TITLE,
     CONF_URL,
+    COOKIE_NAME,
     DEFAULT_ICON,
-    DEFAULT_PROXY_PORT,
     DEFAULT_TITLE,
     DEFAULT_URL,
+    DOMAIN,
+    PANEL_ELEMENT,
     PANEL_URL_PATH,
+    PROXY_PATH,
+    STATIC_PATH,
 )
 from .proxy import BambuddyProxy
+from .views import BambuddyProxyView, BambuddySessionView, PanelRuntime, SessionSigner
 
-_LOGGER = logging.getLogger(__name__)
+_HTTP_REGISTERED = f"{DOMAIN}_http_registered"
 
 
-async def _ha_host(hass: HomeAssistant) -> str:
-    """Host name/IP that browsers on the LAN use to reach Home Assistant."""
-    try:
-        host = urlsplit(get_url(hass, allow_external=False)).hostname
-        if host:
-            return host
-    except NoURLAvailableError:
-        pass
-    return await async_get_source_ip(hass)
+async def _async_secret(hass: HomeAssistant) -> str:
+    """Cookie signing key, kept in .storage so sessions survive restarts."""
+    store: Store[dict[str, str]] = Store(hass, 1, f"{DOMAIN}.secret")
+    data = await store.async_load()
+    if not data or "secret" not in data:
+        data = {"secret": secrets.token_hex(32)}
+        await store.async_save(data)
+    return data["secret"]
+
+
+async def _async_register_http(hass: HomeAssistant) -> None:
+    """Views and static files can't be unregistered, so add them once per run."""
+    if hass.data.get(_HTTP_REGISTERED):
+        return
+    await hass.http.async_register_static_paths(
+        [StaticPathConfig(STATIC_PATH, str(Path(__file__).parent / "www"), False)]
+    )
+    hass.http.register_view(BambuddySessionView(hass))
+    hass.http.register_view(BambuddyProxyView(hass))
+    hass.data[_HTTP_REGISTERED] = True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Start the proxy (if enabled) and register the sidebar panel."""
+    """Start the proxy and register the sidebar panel."""
     conf = {**entry.data, **entry.options}
-    url = conf.get(CONF_URL, DEFAULT_URL)
-    port = int(conf.get(CONF_PROXY_PORT, DEFAULT_PROXY_PORT))
+    version = (await async_get_integration(hass, DOMAIN)).version
 
-    proxy = None
-    panel_url = url
-    if port:
-        proxy = BambuddyProxy(url, port)
-        try:
-            await proxy.start()
-        except OSError as err:
-            raise ConfigEntryNotReady(f"Can't listen on port {port}: {err}") from err
-        panel_url = f"http://{await _ha_host(hass)}:{port}/"
-    entry.runtime_data = proxy
+    proxy = BambuddyProxy(
+        conf.get(CONF_URL, DEFAULT_URL),
+        PROXY_PATH,
+        f"{STATIC_PATH}/shim.js?v={version}",
+        COOKIE_NAME,
+    )
+    await proxy.start()
+    hass.data[DOMAIN] = PanelRuntime(proxy, SessionSigner(await _async_secret(hass)))
+    await _async_register_http(hass)
 
-    frontend.async_register_built_in_panel(
+    await panel_custom.async_register_panel(
         hass,
-        "iframe",
+        frontend_url_path=PANEL_URL_PATH,
+        webcomponent_name=PANEL_ELEMENT,
         sidebar_title=conf.get(CONF_TITLE, DEFAULT_TITLE),
         sidebar_icon=conf.get(CONF_ICON, DEFAULT_ICON),
-        frontend_url_path=PANEL_URL_PATH,
-        config={"url": panel_url},
+        module_url=f"{STATIC_PATH}/panel.js?v={version}",
         require_admin=False,
     )
-    _LOGGER.debug("Bambuddy panel registered for %s", panel_url)
 
     entry.async_on_unload(entry.add_update_listener(_async_reload))
     return True
@@ -74,8 +86,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Remove the panel and stop the proxy."""
     frontend.async_remove_panel(hass, PANEL_URL_PATH)
-    if entry.runtime_data is not None:
-        await entry.runtime_data.stop()
+    runtime: PanelRuntime | None = hass.data.pop(DOMAIN, None)
+    if runtime is not None:
+        await runtime.proxy.stop()
     return True
 
 

@@ -1,23 +1,22 @@
 # Bambuddy Panel for Home Assistant
 
-Adds the [Bambuddy](https://github.com/maziggy/bambuddy) web app to the Home Assistant sidebar, shown full size in the main window.
+Adds the [Bambuddy](https://github.com/maziggy/bambuddy) web app to the Home Assistant sidebar, shown full size in the main window. Home Assistant serves Bambuddy itself, so it works everywhere Home Assistant does, including the Companion app over Nabu Casa / https remote access. This is useful for printers in LAN mode, where Bambu Handy can't reach them.
 
-## Why there's a proxy
+## How it works
 
-Bambuddy sends `X-Frame-Options: SAMEORIGIN` and `Content-Security-Policy: frame-ancestors 'none'`, so browsers refuse to show it inside another page. The integration therefore runs a small reverse proxy on the Home Assistant host (port **8001** by default). The proxy forwards everything to Bambuddy, including live streams and websockets, and removes only those two restrictions. The sidebar panel loads Bambuddy through the proxy.
+- Home Assistant proxies Bambuddy under `/api/bambuddy_panel/proxy/`: pages, API, live websocket updates and camera streams.
+- **Login:** the panel exchanges your Home Assistant login for a signed, HTTP-only session cookie scoped to that path. Without the cookie the proxy returns 401, so Bambuddy is never exposed without a Home Assistant login. The signing key is kept in `.storage/bambuddy_panel.secret`.
+- **Path rewriting:** Bambuddy expects to run at the root of its own server. The proxy rewrites absolute paths in its HTML and CSS, gives its router a base path, and injects `shim.js` to redirect URLs the app builds at runtime. It also removes Bambuddy's "don't frame me" headers.
+- **Service worker:** Bambuddy's offline service worker is disabled inside Home Assistant, because it would take over Home Assistant's own address.
+- **Compression:** text is gzipped by the proxy. Bambuddy's ~10 MB app bundle is otherwise sent uncompressed, which matters on mobile data.
 
-Set the proxy port to `0` to load Bambuddy directly (only works if Bambuddy is changed to allow framing).
-
-Notes:
-
-- The proxy listens on the LAN only, with the same access as Bambuddy itself (no Home Assistant login in front of it).
-- If you open Home Assistant over `https://`, the browser blocks an `http://` panel. The panel only works when Home Assistant is opened over `http://` on the LAN, unless the proxy is put behind TLS.
+**Known limits:** a few Bambuddy actions do a full page navigation, such as the "Projects" link in the archive menu. On browsers without the Navigation API (older Safari), these can land on Home Assistant instead of Bambuddy. Re-open the panel from the sidebar if that happens. Camera pop-out windows that open in an external browser won't have the session cookie.
 
 ## Install
 
 1. HACS → ⋮ → Custom repositories → add `https://github.com/james194zt/ha_bambuddy`, type **Integration**.
 2. Download **Bambuddy Panel**, then restart Home Assistant.
 3. Settings → Devices & services → Add integration → **Bambuddy Panel**.
-4. Check the URL (default `http://192.168.1.1:8000`), title, icon and proxy port, then submit.
+4. Check the URL (default `http://192.168.1.1:8000`), title and icon, then submit.
 
 To change these settings later, open the integration and click **Configure**.
