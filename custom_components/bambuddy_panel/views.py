@@ -9,8 +9,8 @@ import time
 
 from aiohttp import web
 
+from homeassistant.components.http import KEY_HASS_USER, HomeAssistantView
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.http import KEY_HASS_USER, HomeAssistantView
 
 from .const import COOKIE_NAME, DOMAIN, PROXY_PATH, SESSION_PATH, SESSION_TTL
 from .proxy import BambuddyProxy

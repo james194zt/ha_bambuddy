@@ -14,7 +14,6 @@ class BambuddyPanel extends HTMLElement {
         .toolbar {
           display: none; align-items: center; gap: 12px;
           height: var(--header-height, 56px); padding: 0 12px;
-          padding-top: var(--safe-area-inset-top, 0px);
           background: var(--app-header-background-color, var(--primary-color));
           color: var(--app-header-text-color, #fff);
           border-bottom: var(--app-header-border-bottom, none);
