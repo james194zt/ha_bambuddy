@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -37,6 +39,18 @@ async def test_panel_registered(hass, bambuddy) -> None:
     assert custom["name"] == "bambuddy-panel"
     assert custom["module_url"].startswith("/bambuddy_panel_static/panel.js?v=")
     assert panel.sidebar_title == "Bambuddy"
+
+
+async def test_brand_icon(hass, bambuddy, hass_client) -> None:
+    """HA serves the integration icon from custom_components/.../brand/."""
+    await _setup(hass, bambuddy[0])
+    assert await async_setup_component(hass, "brands", {})
+    client = await hass_client()
+    icon = Path(__file__).parents[1] / "custom_components" / DOMAIN / "brand" / "icon.png"
+    for image in ("icon.png", "dark_icon.png", "logo.png"):
+        resp = await client.get(f"/api/brands/integration/{DOMAIN}/{image}")
+        assert resp.status == 200, image
+        assert await resp.read() == icon.read_bytes(), image
 
 
 async def test_proxy_needs_session(hass, bambuddy, hass_client_no_auth) -> None:
