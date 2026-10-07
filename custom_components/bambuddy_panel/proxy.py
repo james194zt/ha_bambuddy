@@ -214,9 +214,14 @@ class BambuddyProxy:
                     headers=self._response_headers(upstream, rewritten=False),
                 )
                 await response.prepare(request)
-                async for chunk in upstream.content.iter_any():
-                    await response.write(chunk)
-                await response.write_eof()
+                try:
+                    async for chunk in upstream.content.iter_any():
+                        await response.write(chunk)
+                    await response.write_eof()
+                except (ConnectionResetError, aiohttp.ClientError):
+                    # Viewer went away (e.g. closed the camera) or Bambuddy
+                    # dropped the stream; leaving the block closes upstream.
+                    pass
                 return response
 
             cacheable = "/assets/" in path and request.method == "GET"
