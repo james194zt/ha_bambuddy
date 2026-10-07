@@ -10,7 +10,13 @@ class BambuddyPanel extends HTMLElement {
     const root = this.attachShadow({ mode: "open" });
     root.innerHTML = `
       <style>
-        :host { display: flex; flex-direction: column; height: 100%; }
+        /* HA's panel container has no height of its own, only safe-area
+           padding, so size to the viewport minus that padding. */
+        :host {
+          display: flex; flex-direction: column;
+          height: calc(100vh - var(--safe-area-inset-top, 0px) - var(--safe-area-inset-bottom, 0px));
+          height: calc(100dvh - var(--safe-area-inset-top, 0px) - var(--safe-area-inset-bottom, 0px));
+        }
         .toolbar {
           display: none; align-items: center; gap: 12px;
           height: var(--header-height, 56px); padding: 0 12px;
