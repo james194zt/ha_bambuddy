@@ -1,0 +1,38 @@
+{
+  "config": {
+    "abort": {
+      "single_instance_allowed": "Bambuddy Panel is already set up."
+    },
+    "step": {
+      "user": {
+        "title": "Bambuddy Panel",
+        "description": "Adds Bambuddy to the sidebar.",
+        "data": {
+          "url": "Bambuddy URL",
+          "title": "Sidebar title",
+          "icon": "Sidebar icon",
+          "proxy_port": "Proxy port"
+        },
+        "data_description": {
+          "proxy_port": "Bambuddy blocks being shown inside other pages, so Home Assistant serves it through a small proxy on this port. Set 0 to load Bambuddy directly."
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Bambuddy Panel",
+        "data": {
+          "url": "Bambuddy URL",
+          "title": "Sidebar title",
+          "icon": "Sidebar icon",
+          "proxy_port": "Proxy port"
+        },
+        "data_description": {
+          "proxy_port": "Bambuddy blocks being shown inside other pages, so Home Assistant serves it through a small proxy on this port. Set 0 to load Bambuddy directly."
+        }
+      }
+    }
+  }
+}

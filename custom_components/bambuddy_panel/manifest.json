@@ -1,0 +1,14 @@
+{
+  "domain": "bambuddy_panel",
+  "name": "Bambuddy Panel",
+  "codeowners": ["@james194zt"],
+  "config_flow": true,
+  "dependencies": ["frontend", "http"],
+  "documentation": "https://github.com/james194zt/ha_bambuddy",
+  "issue_tracker": "https://github.com/james194zt/ha_bambuddy/issues",
+  "integration_type": "service",
+  "iot_class": "local_push",
+  "requirements": [],
+  "single_config_entry": true,
+  "version": "0.1.0"
+}
