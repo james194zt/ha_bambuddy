@@ -17,20 +17,25 @@ class BambuddyPanel extends HTMLElement {
           height: calc(100vh - var(--safe-area-inset-top, 0px) - var(--safe-area-inset-bottom, 0px));
           height: calc(100dvh - var(--safe-area-inset-top, 0px) - var(--safe-area-inset-bottom, 0px));
         }
+        /* Same header as HA's add-on (ingress) panels, e.g. AdGuard: only
+           shown when the sidebar can't be seen. */
         .toolbar {
-          display: none; align-items: center; gap: 12px;
-          height: var(--header-height, 56px); padding: 0 12px;
-          background: var(--app-header-background-color, var(--primary-color));
-          color: var(--app-header-text-color, #fff);
+          display: none; align-items: center; box-sizing: border-box;
+          height: 40px; padding: 0 16px; flex: none;
+          font-size: var(--ha-font-size-l, 20px);
+          font-weight: var(--ha-font-weight-normal, 400);
+          background-color: var(--app-header-background-color);
+          color: var(--app-header-text-color, white);
           border-bottom: var(--app-header-border-bottom, none);
-          font-size: 20px; flex: none;
         }
-        :host([narrow]) .toolbar { display: flex; }
+        :host([show-header]) .toolbar { display: flex; }
+        .title { margin-inline-start: var(--ha-space-2, 8px); flex-grow: 1; }
         button {
-          background: none; border: 0; color: inherit; padding: 8px;
-          cursor: pointer; display: flex; border-radius: 50%;
+          background: none; border: 0; color: inherit; padding: 10px;
+          margin-inline-start: -10px; cursor: pointer; display: flex;
+          border-radius: 50%;
         }
-        svg { width: 24px; height: 24px; fill: currentColor; }
+        svg { width: 20px; height: 20px; fill: currentColor; }
         iframe { flex: 1; width: 100%; border: 0; display: block; }
         .error { padding: 24px; color: var(--error-color, #db4437); }
       </style>
@@ -49,11 +54,18 @@ class BambuddyPanel extends HTMLElement {
   set hass(hass) {
     const first = !this._hass;
     this._hass = hass;
+    this._updateHeader();
     if (first) this._load();
   }
 
   set narrow(narrow) {
-    this.toggleAttribute("narrow", !!narrow);
+    this._narrow = !!narrow;
+    this._updateHeader();
+  }
+
+  _updateHeader() {
+    const hidden = this._hass && this._hass.dockedSidebar === "always_hidden";
+    this.toggleAttribute("show-header", this._narrow || !!hidden);
   }
 
   set panel(panel) {
