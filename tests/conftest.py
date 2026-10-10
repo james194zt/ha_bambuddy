@@ -56,6 +56,9 @@ async def bambuddy(socket_enabled):
         seen["api_cookie"] = request.headers.get("Cookie")
         return web.json_response([{"name": "My Printer"}])
 
+    async def photo(request: web.Request) -> web.Response:
+        return web.Response(body=b"\xff\xd8JPEG", content_type="image/jpeg")
+
     async def redirect(request: web.Request) -> web.Response:
         return web.Response(status=302, headers={"Location": "/setup"})
 
@@ -82,6 +85,7 @@ async def bambuddy(socket_enabled):
     app.router.add_get("/assets/index-abc.css", css)
     app.router.add_get("/api/v1/printers/", printers)
     app.router.add_get("/old", redirect)
+    app.router.add_get("/api/v1/notifications/photos/{name}", photo)
     app.router.add_get("/api/v1/printers/2/camera/stream", stream)
     app.router.add_get("/api/v1/ws", ws)
     runner = web.AppRunner(app)

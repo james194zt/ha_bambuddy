@@ -5,6 +5,7 @@ DOMAIN = "bambuddy_panel"
 CONF_URL = "url"
 CONF_TITLE = "title"
 CONF_ICON = "icon"
+CONF_NOTIFY_TARGETS = "notify_targets"
 
 DEFAULT_URL = "http://192.168.1.1:8000"
 DEFAULT_TITLE = "Bambuddy"
@@ -23,3 +24,8 @@ STATIC_PATH = "/bambuddy_panel_static"
 # swaps it for this signed cookie, scoped to PROXY_PATH.
 COOKIE_NAME = "bambuddy_panel_session"
 SESSION_TTL = 24 * 3600
+
+# Called by Bambuddy's Home Assistant notification provider.
+SERVICE_NOTIFY = "notify"
+# Bambuddy's notification snapshots (unguessable filename per photo).
+PHOTO_PATH = "/api/v1/notifications/photos/"

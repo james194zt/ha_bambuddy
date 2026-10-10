@@ -12,6 +12,23 @@ Adds the [Bambuddy](https://github.com/maziggy/bambuddy) web app to the Home Ass
 
 **Known limits:** a few Bambuddy actions do a full page navigation, such as the "Projects" link in the archive menu. On browsers without the Navigation API (older Safari), these can land on Home Assistant instead of Bambuddy. Re-open the panel from the sidebar if that happens. Camera pop-out windows that open in an external browser won't have the session cookie.
 
+## Notifications on your phone
+
+Bambuddy has a built-in Home Assistant notification provider. Point it at this integration's `bambuddy_panel.notify` service to get Bambuddy's alerts as Companion app push notifications, including the camera snapshot, even away from home.
+
+The service forwards each notification to the phones you pick, with two changes:
+- **Snapshot:** the link, which Bambuddy builds from its LAN "External URL", is rewritten to load through Home Assistant with your login.
+- **Tap action:** tapping the notification opens the Bambuddy panel.
+
+1. Home Assistant: Bambuddy Panel → **Configure** → **Notification phones**, then pick your phone(s) (e.g. `notify.mobile_app_my_phone`).
+2. Bambuddy: Settings → Notifications → **Add provider** → **Home Assistant**.
+   - **Service:** `bambuddy_panel.notify`
+   - Leave **Attach photo** on, and tick the events you want.
+   - Bambuddy needs its Home Assistant connection set up (Settings → Network → Home Assistant), and its **External URL** set (any value works, e.g. its LAN address) or it won't attach snapshots.
+3. Press **Test** on the provider.
+
+Any extra **Data** you set on the provider (e.g. `{"priority": "high", "ttl": 0}`) is passed to the phone unchanged.
+
 ## Install
 
 1. HACS → ⋮ → Custom repositories → add `https://github.com/james194zt/ha_bambuddy`, type **Integration**.

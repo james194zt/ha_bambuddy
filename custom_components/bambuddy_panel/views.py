@@ -9,7 +9,11 @@ import time
 
 from aiohttp import web
 
-from homeassistant.components.http import KEY_HASS_USER, HomeAssistantView
+from homeassistant.components.http import (
+    KEY_AUTHENTICATED,
+    KEY_HASS_USER,
+    HomeAssistantView,
+)
 from homeassistant.core import HomeAssistant
 
 from .const import COOKIE_NAME, DOMAIN, PROXY_PATH, SESSION_PATH, SESSION_TTL
@@ -78,24 +82,30 @@ class BambuddySessionView(HomeAssistantView):
 
 
 class BambuddyProxyView(HomeAssistantView):
-    """Bambuddy, served through Home Assistant (cookie-authenticated)."""
+    """Bambuddy, served through Home Assistant (HA login or session cookie)."""
 
     url = PROXY_PATH + "/{path:.*}"
     extra_urls = [PROXY_PATH]
     name = "api:bambuddy_panel:proxy"
-    # Iframe requests can't send the bearer token; the session cookie is
-    # checked in _handle instead.
+    # Iframe requests can't send the bearer token, so auth is checked in
+    # _handle: the session cookie, or a normal Home Assistant login (e.g. the
+    # Companion app fetching a notification snapshot).
     requires_auth = False
 
     def __init__(self, hass: HomeAssistant) -> None:
         self.hass = hass
 
+    async def _user(self, request: web.Request, runtime: PanelRuntime):
+        if request.get(KEY_AUTHENTICATED):
+            return request.get(KEY_HASS_USER)
+        user_id = runtime.signer.verify(request.cookies.get(COOKIE_NAME, ""))
+        return await self.hass.auth.async_get_user(user_id) if user_id else None
+
     async def _handle(self, request: web.Request, path: str = "") -> web.StreamResponse:
         runtime: PanelRuntime | None = self.hass.data.get(DOMAIN)
         if runtime is None:
             return web.Response(status=404, text="Bambuddy Panel is not loaded")
-        user_id = runtime.signer.verify(request.cookies.get(COOKIE_NAME, ""))
-        user = await self.hass.auth.async_get_user(user_id) if user_id else None
+        user = await self._user(request, runtime)
         if user is None or not user.is_active:
             return web.Response(
                 status=401, text="Open Bambuddy from the Home Assistant sidebar."

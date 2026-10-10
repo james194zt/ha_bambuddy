@@ -26,6 +26,7 @@ from .const import (
     PROXY_PATH,
     STATIC_PATH,
 )
+from . import services
 from .proxy import BambuddyProxy
 from .views import BambuddyProxyView, BambuddySessionView, PanelRuntime, SessionSigner
 
@@ -78,6 +79,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         module_url=f"{STATIC_PATH}/panel.js?v={version}",
         require_admin=False,
     )
+    services.async_register(hass, entry)
 
     entry.async_on_unload(entry.add_update_listener(_async_reload))
     return True
@@ -86,6 +88,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Remove the panel and stop the proxy."""
     frontend.async_remove_panel(hass, PANEL_URL_PATH)
+    services.async_unregister(hass)
     runtime: PanelRuntime | None = hass.data.pop(DOMAIN, None)
     if runtime is not None:
         await runtime.proxy.stop()

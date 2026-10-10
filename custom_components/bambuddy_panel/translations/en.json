@@ -10,10 +10,12 @@
         "data": {
           "url": "Bambuddy URL",
           "title": "Sidebar title",
-          "icon": "Sidebar icon"
+          "icon": "Sidebar icon",
+          "notify_targets": "Notification phones"
         },
         "data_description": {
-          "url": "Address Home Assistant uses to reach Bambuddy on your network."
+          "url": "Address Home Assistant uses to reach Bambuddy on your network.",
+          "notify_targets": "Where bambuddy_panel.notify sends Bambuddy's notifications. In Bambuddy, add a Home Assistant notification provider with service bambuddy_panel.notify."
         }
       }
     }
@@ -25,10 +27,32 @@
         "data": {
           "url": "Bambuddy URL",
           "title": "Sidebar title",
-          "icon": "Sidebar icon"
+          "icon": "Sidebar icon",
+          "notify_targets": "Notification phones"
         },
         "data_description": {
-          "url": "Address Home Assistant uses to reach Bambuddy on your network."
+          "url": "Address Home Assistant uses to reach Bambuddy on your network.",
+          "notify_targets": "Where bambuddy_panel.notify sends Bambuddy's notifications. In Bambuddy, add a Home Assistant notification provider with service bambuddy_panel.notify."
+        }
+      }
+    }
+  },
+  "services": {
+    "notify": {
+      "name": "Send Bambuddy notification",
+      "description": "Sends a notification to the phones chosen in Bambuddy Panel's options. Camera snapshots load through Home Assistant and tapping opens the Bambuddy panel. Used by Bambuddy's Home Assistant notification provider.",
+      "fields": {
+        "title": {
+          "name": "Title",
+          "description": "Notification title."
+        },
+        "message": {
+          "name": "Message",
+          "description": "Notification text."
+        },
+        "data": {
+          "name": "Data",
+          "description": "Extra notify data, e.g. image (a Bambuddy snapshot link is rewritten to load through Home Assistant)."
         }
       }
     }

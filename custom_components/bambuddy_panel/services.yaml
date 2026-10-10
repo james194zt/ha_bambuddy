@@ -1,0 +1,14 @@
+notify:
+  fields:
+    title:
+      example: "Print complete"
+      selector:
+        text:
+    message:
+      required: true
+      example: "Benchy finished on My Printer"
+      selector:
+        text:
+    data:
+      selector:
+        object:
